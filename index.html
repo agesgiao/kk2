@@ -15,15 +15,12 @@
       height: 100%;
       background-color: white;
     }
-
     a-scene {
       width: 100vw;
       height: 100vh;
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
     }
-
     .overlay {
       position: fixed;
       top: 0; left: 0;
@@ -34,13 +31,11 @@
       align-items: center;
       z-index: 9999;
     }
-
     .overlay video {
       width: 90vw;
       max-width: 640px;
       height: auto;
     }
-
     #countdown {
       position: fixed;
       top: 50%;
@@ -145,16 +140,28 @@
         countdownEl.style.display = "none";
         clearTimeout(timeoutId);
         clearInterval(countdownInterval);
+        playedVoices.clear();
+        challengeStarted = false;
+        endingTriggered = false;
       }
 
-      // 各ターゲットの動作
+      // カウントダウン中はターゲット1のみ認識許可用のフラグ
+      let countdownActive = false;
+
       for (let i = 1; i <= 15; i++) {
         const el = document.getElementById(`target${i}`);
         el.addEventListener("targetFound", () => {
+          if (countdownActive && i !== 1) {
+            // カウントダウン中はターゲット1以外無視
+            return;
+          }
+
           if (i === 1) {
             if (!challengeStarted) {
+              // チャレンジ中でなければvoice1再生
               playVoice("voice1");
             } else if (!endingTriggered) {
+              // 成功条件達成（チャレンジ中にターゲット1検知）
               clearTimeout(timeoutId);
               clearInterval(countdownInterval);
               countdownEl.style.display = "none";
@@ -162,23 +169,34 @@
               overlayVideoSuccess.play();
               challengeStarted = false;
               endingTriggered = true;
+              countdownActive = false;
             }
-          } else if ([2, 3, 4, 6, 7, 9, 10, 12, 14].includes(i)) {
+          } else if ([2,3,4].includes(i)) {
             playVoice(`voice${i}`);
           } else if (i === 5) {
             videoMap.kk1.play();
+          } else if ([6,7].includes(i)) {
+            playVoice(`voice${i}`);
           } else if (i === 8) {
             videoMap.kk2.play();
+          } else if ([9,10].includes(i)) {
+            playVoice(`voice${i}`);
           } else if (i === 11) {
             videoMap.kk3.play();
+          } else if (i === 12) {
+            playVoice("voice9");
           } else if (i === 13) {
             videoMap.kk4.play();
+          } else if (i === 14) {
+            playVoice("voice10");
           } else if (i === 15 && !challengeStarted && !endingTriggered) {
             challengeStarted = true;
+            countdownActive = true;
 
             let count = 10;
             countdownEl.textContent = count;
             countdownEl.style.display = "block";
+
             countdownInterval = setInterval(() => {
               count--;
               countdownEl.textContent = count;
@@ -194,6 +212,7 @@
                 overlayVideoFail.play();
                 endingTriggered = true;
                 challengeStarted = false;
+                countdownActive = false;
               }
             }, 10000);
           }
