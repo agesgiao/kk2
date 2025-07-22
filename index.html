@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MindAR 15 Targets</title>
+  <title>MindAR 16 Targets</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -78,30 +78,31 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- ターゲット1〜15 -->
+    <!-- ターゲット1〜16 -->
     <a-entity id="target1" mindar-image-target="targetIndex: 0"></a-entity>
     <a-entity id="target2" mindar-image-target="targetIndex: 1"></a-entity>
     <a-entity id="target3" mindar-image-target="targetIndex: 2"></a-entity>
     <a-entity id="target4" mindar-image-target="targetIndex: 3"></a-entity>
     <a-entity id="target5" mindar-image-target="targetIndex: 4">
-  <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk1"></a-plane>
-</a-entity>
+      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk1"></a-plane>
+    </a-entity>
     <a-entity id="target6" mindar-image-target="targetIndex: 5"></a-entity>
     <a-entity id="target7" mindar-image-target="targetIndex: 6"></a-entity>
     <a-entity id="target8" mindar-image-target="targetIndex: 7">
-  <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk2"></a-plane>
-</a-entity>
+      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk2"></a-plane>
+    </a-entity>
     <a-entity id="target9" mindar-image-target="targetIndex: 8"></a-entity>
     <a-entity id="target10" mindar-image-target="targetIndex: 9"></a-entity>
     <a-entity id="target11" mindar-image-target="targetIndex: 10">
-  <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk3"></a-plane>
-</a-entity>
+      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk3"></a-plane>
+    </a-entity>
     <a-entity id="target12" mindar-image-target="targetIndex: 11"></a-entity>
-   <a-entity id="target13" mindar-image-target="targetIndex: 12">
-  <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk4"></a-plane>
-</a-entity>
+    <a-entity id="target13" mindar-image-target="targetIndex: 12">
+      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk4"></a-plane>
+    </a-entity>
     <a-entity id="target14" mindar-image-target="targetIndex: 13"></a-entity>
     <a-entity id="target15" mindar-image-target="targetIndex: 14"></a-entity>
+    <a-entity id="target16" mindar-image-target="targetIndex: 15"></a-entity>
   </a-scene>
 
   <!-- オーバーレイ動画 -->
@@ -117,13 +118,11 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // 音声要素取得
       const voiceMap = {};
       for (let i = 1; i <= 11; i++) {
         voiceMap[`voice${i}`] = document.getElementById(`voice${i}`);
       }
 
-      // 動画要素
       const videoMap = {
         kk1: document.getElementById("kk1"),
         kk2: document.getElementById("kk2"),
@@ -131,7 +130,6 @@
         kk4: document.getElementById("kk4"),
       };
 
-      // オーバーレイ関連
       const overlaySuccess = document.getElementById("overlay-success");
       const overlayFail = document.getElementById("overlay-fail");
       const overlayVideoSuccess = document.getElementById("overlay-video-success");
@@ -142,7 +140,6 @@
       let endingTriggered = false;
       let countdownInterval, timeoutId;
 
-      // 音声キュー処理
       const voiceQueue = [];
       let currentVoice = null;
 
@@ -164,7 +161,6 @@
         }
         currentVoice.currentTime = 0;
         currentVoice.play();
-
         currentVoice.onended = () => {
           currentVoice = null;
           tryPlayNextVoice();
@@ -204,6 +200,7 @@
       }
 
       function startCountdown() {
+        if (challengeStarted) return;
         challengeStarted = true;
         let count = 10;
         countdownEl.textContent = count;
@@ -223,19 +220,22 @@
             resetOverlayVideos();
             overlayFail.style.display = "flex";
             overlayVideoFail.play();
-
             challengeStarted = false;
             endingTriggered = true;
           }
         }, 10000);
       }
 
-      // ターゲット認識処理
-      for (let i = 1; i <= 15; i++) {
-        const el = document.getElementById(`target${i}`);
+      overlayVideoSuccess.onended = () => {
+        overlaySuccess.style.display = "none";
+      };
+      overlayVideoFail.onended = () => {
+        overlayFail.style.display = "none";
+      };
 
+      for (let i = 1; i <= 16; i++) {
+        const el = document.getElementById(`target${i}`);
         el.addEventListener("targetFound", () => {
-          // カウントダウン中はターゲット1以外無視
           if (challengeStarted && i !== 1) return;
 
           if (i === 1) {
@@ -246,10 +246,8 @@
               clearInterval(countdownInterval);
               countdownEl.style.display = "none";
               resetOverlayVideos();
-
               overlaySuccess.style.display = "flex";
               overlayVideoSuccess.play();
-
               challengeStarted = false;
               endingTriggered = true;
             }
@@ -280,17 +278,16 @@
           } else if (i === 14) {
             enqueueVoice("voice10");
           } else if (i === 15 && !challengeStarted && !endingTriggered) {
-            // ターゲット15認識時はvoice11再生後にカウントダウン開始
             resetVideos();
             resetOverlayVideos();
-
             const v11 = voiceMap["voice11"];
             v11.currentTime = 0;
             v11.play();
-
             v11.onended = () => {
               startCountdown();
             };
+          } else if (i === 16) {
+            location.reload(); // ページ全体をリロード
           }
         });
       }
