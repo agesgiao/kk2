@@ -84,21 +84,21 @@
     <a-entity id="target3" mindar-image-target="targetIndex: 2"></a-entity>
     <a-entity id="target4" mindar-image-target="targetIndex: 3"></a-entity>
     <a-entity id="target5" mindar-image-target="targetIndex: 4">
-      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk1"></a-plane>
+      <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk1"></a-plane>
     </a-entity>
     <a-entity id="target6" mindar-image-target="targetIndex: 5"></a-entity>
     <a-entity id="target7" mindar-image-target="targetIndex: 6"></a-entity>
     <a-entity id="target8" mindar-image-target="targetIndex: 7">
-      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk2"></a-plane>
+      <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk2"></a-plane>
     </a-entity>
     <a-entity id="target9" mindar-image-target="targetIndex: 8"></a-entity>
     <a-entity id="target10" mindar-image-target="targetIndex: 9"></a-entity>
     <a-entity id="target11" mindar-image-target="targetIndex: 10">
-      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk3"></a-plane>
+      <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk3"></a-plane>
     </a-entity>
     <a-entity id="target12" mindar-image-target="targetIndex: 11"></a-entity>
     <a-entity id="target13" mindar-image-target="targetIndex: 12">
-      <a-plane width="1" height="0.56" position="0 0 0" material="shader: flat; src: #kk4"></a-plane>
+      <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk4"></a-plane>
     </a-entity>
     <a-entity id="target14" mindar-image-target="targetIndex: 13"></a-entity>
     <a-entity id="target15" mindar-image-target="targetIndex: 14"></a-entity>
@@ -287,7 +287,7 @@
               startCountdown();
             };
           } else if (i === 16) {
-            location.reload(); // ページ全体をリロード
+            resetAll(); // ページ全体をリロード
           }
         });
       }
