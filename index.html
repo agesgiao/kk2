@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MindAR Audio + Video Countdown</title>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+      background-color: white;
+    }
+
+    a-scene {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: white;
+    }
+
+    #countdown {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 4em;
+      font-weight: bold;
+      color: red;
+      z-index: 9999;
+      display: none;
+      pointer-events: none;
+      text-shadow: 2px 2px 5px white;
+    }
+  </style>
+</head>
+<body>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; showStats: false; uiScanning: false;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights, alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+  >
+    <a-assets>
+      <!-- 映像 -->
+      <video id="kk1" src="./kk1.mp4" loop muted playsinline crossorigin="anonymous"></video>
+      <video id="kk2" src="./kk2.mp4" loop muted playsinline crossorigin="anonymous"></video>
+      <video id="kk3" src="./kk3.mp4" loop muted playsinline crossorigin="anonymous"></video>
+      <video id="kk4" src="./kk4.mp4" loop muted playsinline crossorigin="anonymous"></video>
+      <video id="kk5" src="./kk5.mp4" playsinline crossorigin="anonymous"></video>
+      <video id="kk61" src="./kk61.mp4" playsinline crossorigin="anonymous"></video>
+      <video id="kk62" src="./kk62.mp4" playsinline crossorigin="anonymous"></video>
+
+      <!-- 音声 -->
+      <audio id="voice1" src="./voice1.mp3"></audio>
+      <audio id="voice2" src="./voice2.mp3"></audio>
+      <audio id="voice3" src="./voice3.mp3"></audio>
+      <audio id="voice5" src="./voice5.mp3"></audio>
+      <audio id="voice6" src="./voice6.mp3"></audio>
+      <audio id="voice8" src="./voice8.mp3"></audio>
+      <audio id="voice9" src="./voice9.mp3"></audio>
+      <audio id="voice11" src="./voice11.mp3"></audio>
+      <audio id="voice13" src="./voice13.mp3"></audio>
+      <audio id="voice15" src="./voice15.mp3"></audio>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- 映像ターゲット -->
+    <a-entity mindar-image-target="targetIndex: 3">
+      <a-plane width="2" height="1.12" material="shader: flat; src: #kk1"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 6">
+      <a-plane width="2" height="1.12" material="shader: flat; src: #kk2"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 9">
+      <a-plane width="2" height="1.12" material="shader: flat; src: #kk3"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 11">
+      <a-plane width="2" height="1.12" material="shader: flat; src: #kk4"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 13">
+      <a-plane width="2" height="1.12" material="shader: flat; src: #kk5"></a-plane>
+    </a-entity>
+  </a-scene>
+
+  <div id="countdown">10</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const videoSuccess = document.getElementById("kk62");
+      const videoFail = document.getElementById("kk61");
+      const videoKK5 = document.getElementById("kk5");
+      const countdownEl = document.getElementById("countdown");
+
+      const audios = {
+        0: document.getElementById("voice1"),
+        1: document.getElementById("voice2"),
+        2: document.getElementById("voice3"),
+        4: document.getElementById("voice5"),
+        5: document.getElementById("voice6"),
+        7: document.getElementById("voice8"),
+        8: document.getElementById("voice9"),
+        10: document.getElementById("voice11"),
+        12: document.getElementById("voice13"),
+        14: document.getElementById("voice15")
+      };
+
+      const sceneEl = document.querySelector('a-scene');
+
+      let challengeStarted = false;
+      let endingTriggered = false;
+      let countdownTimeout, countdownInterval;
+
+      for (let i = 0; i <= 14; i++) {
+        const targetEl = document.querySelector(`[mindar-image-target="targetIndex: ${i}"]`);
+        if (!targetEl) continue;
+
+        targetEl.addEventListener("targetFound", () => {
+          if (audios[i] && !challengeStarted && !endingTriggered) {
+            audios[i].pause(); audios[i].currentTime = 0; audios[i].play();
+          }
+
+          if (i === 13 && !challengeStarted && !endingTriggered) {
+            challengeStarted = true;
+            videoKK5.play();
+
+            let count = 10;
+            countdownEl.textContent = count;
+            countdownEl.style.display = "block";
+
+            countdownInterval = setInterval(() => {
+              count--;
+              countdownEl.textContent = count;
+              if (count === 0) {
+                clearInterval(countdownInterval);
+                countdownEl.style.display = "none";
+              }
+            }, 1000);
+
+            countdownTimeout = setTimeout(() => {
+              if (!endingTriggered) {
+                videoKK5.pause();
+                videoKK5.currentTime = 0;
+                videoFail.play();
+                challengeStarted = false;
+                endingTriggered = true;
+              }
+            }, 10000);
+          }
+
+          if (i === 14 && challengeStarted && !endingTriggered) {
+            clearTimeout(countdownTimeout);
+            clearInterval(countdownInterval);
+            countdownEl.style.display = "none";
+
+            videoKK5.pause();
+            videoKK5.currentTime = 0;
+            videoSuccess.play();
+            challengeStarted = false;
+            endingTriggered = true;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
