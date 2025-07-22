@@ -179,27 +179,29 @@
               endingTriggered = true;
               countdownActive = false;
             }
-          } else if ([2, 3, 4].includes(i)) {
-            playVoice(`voice${i}`);
-          } else if (i === 5) {
-            // ここがターゲット5のkk1再生。しっかり動くはず。
-            videoMap.kk1.play();
-          } else if ([6, 7].includes(i)) {
-            // ターゲット6,7はvoice5,voice6
-            playVoice(`voice${i}`);
-          } else if (i === 8) {
-            videoMap.kk2.play();
-          } else if ([9, 10].includes(i)) {
-            playVoice(`voice${i}`);
-          } else if (i === 11) {
-            videoMap.kk3.play();
-          } else if (i === 12) {
-            playVoice("voice9");
-          } else if (i === 13) {
-            videoMap.kk4.play();
-          } else if (i === 14) {
-            playVoice("voice10");
-          } else if (i === 15 && !challengeStarted && !endingTriggered) {
+          　 } else if (i >= 2 && i <= 4) {
+                playVoice(`voice${i}`);  // ターゲット2~4はvoice2~4
+            } else if (i === 5) {
+                videoMap.kk1.play();
+            } else if (i === 6) {
+                playVoice('voice5');  // ターゲット6でvoice5
+            } else if (i === 7) {
+                playVoice('voice6');  // ターゲット7でvoice6
+            } else if (i === 8) {
+                videoMap.kk2.play();
+            } else if (i === 9) {
+                playVoice('voice7');
+            } else if (i === 10) {
+                playVoice('voice8');
+            } else if (i === 11) {
+                videoMap.kk3.play();
+            } else if (i === 12) {
+                playVoice('voice9');
+            } else if (i === 13) {
+                videoMap.kk4.play();
+            } else if (i === 14) {
+                playVoice('voice10');
+            } else if (i === 15 && !challengeStarted && !endingTriggered) {
             // カウントダウン開始
             challengeStarted = true;
             countdownActive = true;
