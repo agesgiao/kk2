@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MindAR 15 Targets - 修正版</title>
+  <title>MindAR 15 Targets</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -15,12 +15,15 @@
       height: 100%;
       background-color: white;
     }
+
     a-scene {
       width: 100vw;
       height: 100vh;
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
     }
+
     .overlay {
       position: fixed;
       top: 0; left: 0;
@@ -31,11 +34,13 @@
       align-items: center;
       z-index: 9999;
     }
+
     .overlay video {
       width: 90vw;
       max-width: 640px;
       height: auto;
     }
+
     #countdown {
       position: fixed;
       top: 50%;
@@ -68,6 +73,7 @@
       <audio id="voice8" src="./voice8.mp3" preload="auto"></audio>
       <audio id="voice9" src="./voice9.mp3" preload="auto"></audio>
       <audio id="voice10" src="./voice10.mp3" preload="auto"></audio>
+      <audio id="voice11" src="./voice11.mp3" preload="auto"></audio>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -77,28 +83,20 @@
     <a-entity id="target2" mindar-image-target="targetIndex: 1"></a-entity>
     <a-entity id="target3" mindar-image-target="targetIndex: 2"></a-entity>
     <a-entity id="target4" mindar-image-target="targetIndex: 3"></a-entity>
-    <a-entity id="target5" mindar-image-target="targetIndex: 4">
-  <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk1"></a-plane>
-</a-entity>
+    <a-entity id="target5" mindar-image-target="targetIndex: 4"></a-entity>
     <a-entity id="target6" mindar-image-target="targetIndex: 5"></a-entity>
     <a-entity id="target7" mindar-image-target="targetIndex: 6"></a-entity>
-    <a-entity id="target8" mindar-image-target="targetIndex: 7">
-  <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk2"></a-plane>
-</a-entity>
+    <a-entity id="target8" mindar-image-target="targetIndex: 7"></a-entity>
     <a-entity id="target9" mindar-image-target="targetIndex: 8"></a-entity>
     <a-entity id="target10" mindar-image-target="targetIndex: 9"></a-entity>
-    <a-entity id="target11" mindar-image-target="targetIndex: 10">
-  <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk3"></a-plane>
-</a-entity>
+    <a-entity id="target11" mindar-image-target="targetIndex: 10"></a-entity>
     <a-entity id="target12" mindar-image-target="targetIndex: 11"></a-entity>
-    <a-entity id="target13" mindar-image-target="targetIndex: 12">
-  <a-plane width="2" height="1.12" position="0 0 0" material="shader: flat; src: #kk4"></a-plane>
-</a-entity>
+    <a-entity id="target13" mindar-image-target="targetIndex: 12"></a-entity>
     <a-entity id="target14" mindar-image-target="targetIndex: 13"></a-entity>
     <a-entity id="target15" mindar-image-target="targetIndex: 14"></a-entity>
   </a-scene>
 
-  <!-- 成功・失敗オーバーレイ動画 -->
+  <!-- オーバーレイ動画 -->
   <div id="overlay-success" class="overlay">
     <video id="overlay-video-success" src="./kk62.mp4" playsinline muted></video>
   </div>
@@ -111,16 +109,21 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // 音声要素取得
       const voiceMap = {};
-      for (let i = 1; i <= 10; i++) voiceMap[`voice${i}`] = document.getElementById(`voice${i}`);
+      for (let i = 1; i <= 11; i++) {
+        voiceMap[`voice${i}`] = document.getElementById(`voice${i}`);
+      }
 
+      // 動画要素
       const videoMap = {
         kk1: document.getElementById("kk1"),
         kk2: document.getElementById("kk2"),
         kk3: document.getElementById("kk3"),
-        kk4: document.getElementById("kk4")
+        kk4: document.getElementById("kk4"),
       };
 
+      // オーバーレイ関連
       const overlaySuccess = document.getElementById("overlay-success");
       const overlayFail = document.getElementById("overlay-fail");
       const overlayVideoSuccess = document.getElementById("overlay-video-success");
@@ -130,110 +133,161 @@
       let challengeStarted = false;
       let endingTriggered = false;
       let countdownInterval, timeoutId;
-      const playedVoices = new Set();
 
-      function playVoice(id) {
-        if (!playedVoices.has(id)) {
-          voiceMap[id].play();
-          playedVoices.add(id);
-        }
+      // 音声キュー処理
+      const voiceQueue = [];
+      let currentVoice = null;
+
+      function enqueueVoice(id) {
+        voiceQueue.push(id);
+        tryPlayNextVoice();
       }
 
-      function resetMedia() {
-        Object.values(videoMap).forEach(v => { v.pause(); v.currentTime = 0; });
-        Object.values(voiceMap).forEach(a => { a.pause(); a.currentTime = 0; });
-        overlaySuccess.style.display = overlayFail.style.display = "none";
-        overlayVideoSuccess.pause(); overlayVideoSuccess.currentTime = 0;
-        overlayVideoFail.pause(); overlayVideoFail.currentTime = 0;
+      function tryPlayNextVoice() {
+        if (currentVoice) return;
+        if (voiceQueue.length === 0) return;
+
+        const nextId = voiceQueue.shift();
+        currentVoice = voiceMap[nextId];
+        if (!currentVoice) {
+          currentVoice = null;
+          tryPlayNextVoice();
+          return;
+        }
+        currentVoice.currentTime = 0;
+        currentVoice.play();
+
+        currentVoice.onended = () => {
+          currentVoice = null;
+          tryPlayNextVoice();
+        };
+      }
+
+      function resetVideos() {
+        Object.values(videoMap).forEach(v => {
+          v.pause();
+          v.currentTime = 0;
+        });
+      }
+
+      function resetOverlayVideos() {
+        overlaySuccess.style.display = "none";
+        overlayFail.style.display = "none";
+        overlayVideoSuccess.pause();
+        overlayVideoSuccess.currentTime = 0;
+        overlayVideoFail.pause();
+        overlayVideoFail.currentTime = 0;
+      }
+
+      function resetAll() {
+        resetVideos();
+        Object.values(voiceMap).forEach(a => {
+          a.pause();
+          a.currentTime = 0;
+        });
+        resetOverlayVideos();
         countdownEl.style.display = "none";
         clearTimeout(timeoutId);
         clearInterval(countdownInterval);
-        playedVoices.clear();
         challengeStarted = false;
         endingTriggered = false;
+        voiceQueue.length = 0;
+        currentVoice = null;
       }
 
-      // カウントダウン中はターゲット1のみ許可
-      let countdownActive = false;
+      function startCountdown() {
+        challengeStarted = true;
+        let count = 10;
+        countdownEl.textContent = count;
+        countdownEl.style.display = "block";
 
+        countdownInterval = setInterval(() => {
+          count--;
+          countdownEl.textContent = count;
+          if (count <= 0) {
+            clearInterval(countdownInterval);
+            countdownEl.style.display = "none";
+          }
+        }, 1000);
+
+        timeoutId = setTimeout(() => {
+          if (!endingTriggered) {
+            resetOverlayVideos();
+            overlayFail.style.display = "flex";
+            overlayVideoFail.play();
+
+            challengeStarted = false;
+            endingTriggered = true;
+          }
+        }, 10000);
+      }
+
+      // ターゲット認識処理
       for (let i = 1; i <= 15; i++) {
         const el = document.getElementById(`target${i}`);
-        el.addEventListener("targetFound", () => {
-          if (countdownActive && i !== 1) {
-            // カウントダウン中はターゲット1以外は無視
-            return;
-          }
 
-          // ターゲット別処理
+        el.addEventListener("targetFound", () => {
+          // カウントダウン中はターゲット1以外無視
+          if (challengeStarted && i !== 1) return;
+
           if (i === 1) {
             if (!challengeStarted) {
-              playVoice("voice1");
+              enqueueVoice("voice1");
             } else if (!endingTriggered) {
-              // 成功判定
               clearTimeout(timeoutId);
               clearInterval(countdownInterval);
               countdownEl.style.display = "none";
+              resetOverlayVideos();
+
               overlaySuccess.style.display = "flex";
               overlayVideoSuccess.play();
+
               challengeStarted = false;
               endingTriggered = true;
-              countdownActive = false;
             }
-          　 } else if (i >= 2 && i <= 4) {
-                playVoice(`voice${i}`);  // ターゲット2~4はvoice2~4
-            } else if (i === 5) {
-                videoMap.kk1.play();
-            } else if (i === 6) {
-                playVoice('voice5');  // ターゲット6でvoice5
-            } else if (i === 7) {
-                playVoice('voice6');  // ターゲット7でvoice6
-            } else if (i === 8) {
-                videoMap.kk2.play();
-            } else if (i === 9) {
-                playVoice('voice7');
-            } else if (i === 10) {
-                playVoice('voice8');
-            } else if (i === 11) {
-                videoMap.kk3.play();
-            } else if (i === 12) {
-                playVoice('voice9');
-            } else if (i === 13) {
-                videoMap.kk4.play();
-            } else if (i === 14) {
-                playVoice('voice10');
-            } else if (i === 15 && !challengeStarted && !endingTriggered) {
-            // カウントダウン開始
-            challengeStarted = true;
-            countdownActive = true;
+          } else if (i >= 2 && i <= 4) {
+            enqueueVoice(`voice${i}`);
+          } else if (i === 5) {
+            resetVideos();
+            videoMap.kk1.play();
+          } else if (i === 6) {
+            enqueueVoice("voice5");
+          } else if (i === 7) {
+            enqueueVoice("voice6");
+          } else if (i === 8) {
+            resetVideos();
+            videoMap.kk2.play();
+          } else if (i === 9) {
+            enqueueVoice("voice7");
+          } else if (i === 10) {
+            enqueueVoice("voice8");
+          } else if (i === 11) {
+            resetVideos();
+            videoMap.kk3.play();
+          } else if (i === 12) {
+            enqueueVoice("voice9");
+          } else if (i === 13) {
+            resetVideos();
+            videoMap.kk4.play();
+          } else if (i === 14) {
+            enqueueVoice("voice10");
+          } else if (i === 15 && !challengeStarted && !endingTriggered) {
+            // ターゲット15認識時はvoice11再生後にカウントダウン開始
+            resetVideos();
+            resetOverlayVideos();
 
-            let count = 10;
-            countdownEl.textContent = count;
-            countdownEl.style.display = "block";
+            const v11 = voiceMap["voice11"];
+            v11.currentTime = 0;
+            v11.play();
 
-            countdownInterval = setInterval(() => {
-              count--;
-              countdownEl.textContent = count;
-              if (count === 0) {
-                clearInterval(countdownInterval);
-                countdownEl.style.display = "none";
-              }
-            }, 1000);
-
-            timeoutId = setTimeout(() => {
-              if (!endingTriggered) {
-                // 失敗判定: kk61再生
-                overlayFail.style.display = "flex";
-                overlayVideoFail.play();
-                endingTriggered = true;
-                challengeStarted = false;
-                countdownActive = false;
-              }
-            }, 10000);
+            v11.onended = () => {
+              startCountdown();
+            };
           }
         });
       }
 
-      resetMedia();
+      resetAll();
     });
   </script>
 </body>
